@@ -1,17 +1,22 @@
 <template>
   <div id="app">
-    <img alt="Vue logo" src="./assets/logo.png">
-    <HelloWorld msg="Welcome to Your Vue.js App"/>
+    <h1> MineSweeper</h1>
+    <GameBoard class="board"/>
   </div>
 </template>
 
 <script>
-import HelloWorld from "./components/HelloWorld.vue";
+import GameBoard from "./components/GameBoard.vue";
 
 export default {
   name: "app",
   components: {
-    HelloWorld
+    GameBoard
+  },
+  created() {
+    this.$store.commit('generateGameboard', 10);
+    this.$store.commit('poblateGameboard', 10);
+    this.$store.commit('checkSurroundings');
   }
 };
 </script>
@@ -24,5 +29,16 @@ export default {
   text-align: center;
   color: #2c3e50;
   margin-top: 60px;
+  height: 100%;
+}
+.board {
+  height: 50%;
+  width: 50%;
+  margin:auto;
+  margin-top: 10%;
+}
+body, html {
+  height: 100%;
+  width: 100%;
 }
 </style>

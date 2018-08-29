@@ -6,8 +6,9 @@
           :element='element' 
           :x='indexX' 
           :y='indexY' 
-          :open='openedCells[indexX][indexY] === 1'
-          @click.native='clickCell(indexX,indexY)'
+          :state='boardState[indexX][indexY]'
+          @click.native.left='rigthClickCell(indexX,indexY)'
+          @click.native.right.prevent='flagCell(indexX,indexY)'
         />
       </div>
     </div>
@@ -23,7 +24,7 @@ export default {
   },
   data() {
     return {
-      openedCells: this.$store.state.openedCells,
+      boardState: this.$store.state.boardState,
     }
   },
   computed: {
@@ -32,13 +33,14 @@ export default {
     },
   },
   methods: {
-    clickCell(x, y) {
+    rigthClickCell(x, y) {
       console.log(x,y)
       this.openCell(x, y);
-      this.openedCells = this.$store.state.openedCells;
+      this.boardState = this.$store.state.boardState;
+      console.log(this.boardState)
     },
     openCell(x,y) {
-      if (this.$store.state.openedCells[x][y] === 1) return;
+      if (this.$store.state.boardState[x][y] !== 0) return;
       this.$store.commit('openCell',{ x, y });
       const maxIndex = this.$store.state.size - 1;
       if (this.$store.state.board[x][y] === '0') {
@@ -51,6 +53,10 @@ export default {
         if(x > 0 && y < maxIndex) this.openCell(x-1,y+1);
         if(x < maxIndex && y < maxIndex) this.openCell(x+1,y+1);
       }
+    },
+    flagCell(x,y){
+      this.$store.commit('flagCell', {x,y})
+      this.boardState = this.$store.state.boardState;
     }
   }
 };

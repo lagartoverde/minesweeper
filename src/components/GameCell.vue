@@ -1,7 +1,9 @@
 <template>
   <div class="container" :class='{open: open}' >
-    <div v-if='open' class='elementContainer'>
-      {{element}}
+    <img v-if='flagged' src='../assets/flag.svg' />
+    <div v-if='open' class='center'>
+      <img v-if='element === "X"' src='../assets/mine.svg' />
+      <span v-else>{{element}}</span>
     </div>
   </div>
 </template>
@@ -11,8 +13,16 @@ export default {
   name: "GameCell",
   props:{
     element: String,
-    open: Boolean,
+    state: Number,
   },
+  computed: {
+    open() {
+      return this.state === 1;
+    },
+    flagged() {
+      return this.state === 2;
+    }
+  }
 };
 </script>
 
@@ -27,11 +37,16 @@ export default {
 .open {
   background-color: white;
 }
-.elementContainer {
+.center{
   display: flex;
   align-items: center;
   justify-content: center;
   height: 100%;
   width: 100%;
+}
+img {
+  height: 50%;
+  width: 50%;
+  margin: auto;
 }
 </style>

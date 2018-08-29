@@ -6,9 +6,13 @@ Vue.use(Vuex);
 export default new Vuex.Store({
   state: {
     board: [],
-    openedCells: [],
+    boardState: [],
     size: 0,
-    finsihed: false
+    finished: false,
+    flagsRemaining: 0,
+    won: undefined,
+    cellsOpened: 0,
+    mines: 0
   },
   mutations: {
     generateGameboard(state, size) {
@@ -25,7 +29,7 @@ export default new Vuex.Store({
         arrayOpened.push(innerArrayOpened);
       }
       state.board = arrayBoard;
-      state.openedCells = arrayOpened;
+      state.boardState = arrayOpened;
       state.size = size;
     },
     poblateGameboard(state, mines) {
@@ -40,6 +44,8 @@ export default new Vuex.Store({
           }
         }
       }
+      state.mines = mines
+      state.flagsRemaining = mines;
     },
     checkSurroundings(state) {
       for (let i = 0; i < state.size; i++) {
@@ -60,10 +66,33 @@ export default new Vuex.Store({
     },
     openCell(state,{x, y}) {
       if(state.finished) return
-      if(state.board[x][y] === 'X') state.finished = true
-      const copy = state.openedCells.slice(0);
+      if(state.board[x][y] === 'X'){
+        state.finished = true;
+        state.won = false;
+      }
+      const copy = state.boardState.slice(0);
       copy[x][y] = 1;
-      state.openedCells = copy;
+      state.boardState = copy;
+      state.cellsOpened ++;
+      if(state.cellsOpened === (state.size * state.size) - state.mines){
+        state.finished = true;
+        state.won = true;
+      }
+    },
+    flagCell(state, {x,y}) {
+      if(state.finished) return;
+      if(state.boardState[x][y] === 0) {
+        if(state.flagsRemaining === 0) return;
+        const copy = state.boardState.slice(0);
+        copy[x][y] = 2;
+        state.boardState = copy;
+        state.flagsRemaining -= 1
+      } else if(state.boardState[x][y] === 2){
+        const copy = state.boardState.slice(0);
+        copy[x][y] = 0;
+        state.boardState = copy;
+        state.flagsRemaining += 1
+      }
     }
   },
   actions: {}

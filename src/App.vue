@@ -2,6 +2,9 @@
   <div id="app">
     <h1> MineSweeper</h1>
     <GameBoard class="board"/>
+    <h2 v-show='finished'>
+      {{finishedPhrase}}
+    </h2>
   </div>
 </template>
 
@@ -17,6 +20,14 @@ export default {
     this.$store.commit('generateGameboard', 10);
     this.$store.commit('poblateGameboard', 10);
     this.$store.commit('checkSurroundings');
+  },
+  computed: {
+    finished() {
+      return this.$store.state.finished;
+    },
+    finishedPhrase() {
+      return this.$store.state.won ? 'Congratulations, you won :)' : 'Sorry, you have lost'
+    }
   }
 };
 </script>

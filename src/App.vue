@@ -2,8 +2,11 @@
   <div id="app">
     <h1> MineSweeper</h1>
     <GameBoard class="board"/>
-    <h2 v-show='finished'>
+    <h2 v-if='finished'>
       {{finishedPhrase}}
+    </h2>
+    <h2 v-else>
+      Time: {{timeCount}}
     </h2>
   </div>
 </template>
@@ -20,13 +23,21 @@ export default {
     this.$store.commit('generateGameboard', 10);
     this.$store.commit('poblateGameboard', 10);
     this.$store.commit('checkSurroundings');
+    setInterval(()=> {
+      if(!this.finished) {
+        this.$store.commit('incrementTimeCount')
+      }
+    }, 1000);
   },
   computed: {
     finished() {
       return this.$store.state.finished;
     },
     finishedPhrase() {
-      return this.$store.state.won ? 'Congratulations, you won :)' : 'Sorry, you have lost'
+      return this.$store.state.won ? `Congratulations, you won :) Time: ${this.timeCount}s` : 'Sorry, you have lost'
+    },
+    timeCount() {
+      return this.$store.state.timeCount;
     }
   }
 };

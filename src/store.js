@@ -12,7 +12,8 @@ export default new Vuex.Store({
     flagsRemaining: 0,
     won: undefined,
     cellsOpened: 0,
-    mines: 0
+    mines: 0,
+    timeCount: 0
   },
   mutations: {
     generateGameboard(state, size) {
@@ -93,6 +94,9 @@ export default new Vuex.Store({
         state.boardState = copy;
         state.flagsRemaining += 1
       }
+    },
+    incrementTimeCount(state) {
+      state.timeCount++;
     }
   },
   actions: {}

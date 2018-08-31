@@ -1,17 +1,21 @@
 <template>
   <div id="app">
     <h1>Minesweeper</h1>
-    <Game />
+    <div class='content'>
+        <Game />
+        <LeaderBoard />
+    </div>
   </div>
 </template>
 
 <script>
 import Game from "./components/Game.vue";
-
+import LeaderBoard from './components/LeaderBoard.vue'
 export default {
   name: "app",
   components: {
-    Game
+    Game,
+    LeaderBoard
   }
 };
 </script>
@@ -28,6 +32,13 @@ export default {
 }
 body, html {
   height: 100%;
+  width: 98%;
+}
+.content {
   width: 100%;
+  height: 100%;
+  display: grid;
+  grid-template-columns: 70% 30%;
+  grid-template-rows: 100%;
 }
 </style>

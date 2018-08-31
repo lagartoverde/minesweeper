@@ -13,7 +13,17 @@ export default new Vuex.Store({
     won: undefined,
     cellsOpened: 0,
     mines: 0,
-    timeCount: 0
+    timeCount: 0,
+    leaderBoard: [
+      {id: 1, name: 'AAA', seconds: 13},
+      {id: 2, name: 'BBB', seconds: 15},
+      {id: 3, name: 'CCC', seconds: 19},
+      {id: 4, name: 'DDD', seconds: 21},
+      {id: 5, name: 'EEE', seconds: 23},
+      {id: 6, name: 'FFF', seconds: 24},
+      {id: 7, name: 'GGG', seconds: 26},
+      {id: 8, name: 'HHH', seconds: 30},
+    ]
   },
   mutations: {
     generateGameboard(state, size) {

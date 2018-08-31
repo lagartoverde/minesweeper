@@ -73,11 +73,14 @@ export default {
   height: 100%;
   width: 100%;
 }
+.selectGame {
+  margin-top: 8%;
+}
 .board {
-  height: 50%;
+  height: 60%;
   width: 50%;
   margin:auto;
-  margin-top: 10%;
+  margin-top: 2%;
 }
 body, html {
   height: 100%;

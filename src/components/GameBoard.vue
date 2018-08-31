@@ -22,22 +22,18 @@ export default {
   components: {
     GameCell
   },
-  data() {
-    return {
-      boardState: this.$store.state.boardState,
-    }
-  },
   computed: {
     boardArray() {
       return this.$store.state.board;
     },
+    boardState() {
+      return this.$store.state.boardState;
+    }
   },
   methods: {
     rigthClickCell(x, y) {
-      console.log(x,y)
       this.openCell(x, y);
       this.boardState = this.$store.state.boardState;
-      console.log(this.boardState)
     },
     openCell(x,y) {
       if (this.$store.state.boardState[x][y] !== 0) return;

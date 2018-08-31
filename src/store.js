@@ -32,6 +32,10 @@ export default new Vuex.Store({
       state.board = arrayBoard;
       state.boardState = arrayOpened;
       state.size = size;
+      state.finished = false;
+      state.won = undefined;
+      state.cellsOpened = 0;
+      state.timeCount = 0;
     },
     poblateGameboard(state, mines) {
       for (let i = 0; i < mines; i++) {
@@ -97,6 +101,9 @@ export default new Vuex.Store({
     },
     incrementTimeCount(state) {
       state.timeCount++;
+    },
+    resetTimeCount(state){
+      state.timeCount = 0
     }
   },
   actions: {}

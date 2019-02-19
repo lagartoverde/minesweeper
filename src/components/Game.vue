@@ -1,9 +1,9 @@
 <template>
   <div class="container">
     <div class='selectGame'>
-      <button @click='startGame(easyMode)'>Easy</button>
-      <button @click='startGame(mediumMode)'>Medium</button>
-      <button @click='startGame(hardMode)'>Hard</button>
+      <button @click='startGame("easy")'>Easy</button>
+      <button @click='startGame("medium")'>Medium</button>
+      <button @click='startGame("hard")'>Hard</button>
     </div>
     <GameBoard class="board"/>
     <h2 v-if='finished'>
@@ -25,18 +25,7 @@ export default {
   },
   data() {
     return {
-      easyMode: {
-        size: 10,
-        mines: 10
-      },
-      mediumMode: {
-        size: 20,
-        mines: 50
-      },
-      hardMode: {
-        size: 30,
-        mines: 100
-      },
+      
       interval: undefined
     };
   },
@@ -52,15 +41,30 @@ export default {
     },
   },
   methods: {
-    startGame({size, mines}) {
+    startGame(gameMode) {
       clearInterval(this.interval);
       this.$store.commit('resetTimeCount')
-      this.$store.commit('generateGameboard', size);
-      this.$store.commit('poblateGameboard', mines);
+      this.$store.commit('generateGameboard', gameMode);
+      this.$store.commit('poblateGameboard', gameMode);
+      this.$store.commit('changeLeaderboard', gameMode);
       this.$store.commit('checkSurroundings');
       this.interval = setInterval(()=> {
         if(!this.finished) {
           this.$store.commit('incrementTimeCount')
+        } else {
+          if(this.$store.state.won) {
+            let name = prompt('Please Enter your name (3 letters)')
+            name = name.split('').slice(0,3).join('').toUpperCase()
+            if(name) {
+              const score = {
+                name,
+                seconds: this.$store.state.timeCount,
+                mode: gameMode
+              }
+              this.$store.dispatch('submitScore', score)
+            }
+          }
+          clearInterval(this.interval)
         }
       }, 1000);
     }

@@ -3,6 +3,21 @@ import Vuex from "vuex";
 
 Vue.use(Vuex);
 
+const gameModes = {
+  easy: {
+    size: 10,
+    mines: 10
+  },
+  medium: {
+    size: 20,
+    mines: 50
+  },
+  hard: {
+    size: 30,
+    mines: 100
+  },
+}
+
 export default new Vuex.Store({
   state: {
     board: [],
@@ -23,10 +38,12 @@ export default new Vuex.Store({
       {id: 6, name: 'FFF', seconds: 24},
       {id: 7, name: 'GGG', seconds: 26},
       {id: 8, name: 'HHH', seconds: 30},
-    ]
+    ],
+    actualLeaderboard : []
   },
   mutations: {
-    generateGameboard(state, size) {
+    generateGameboard(state, gameMode) {
+      const size = gameModes[gameMode].size
       const arrayBoard = [];
       const arrayOpened = [];
       for (let i = 0; i < size; i++) {
@@ -47,7 +64,8 @@ export default new Vuex.Store({
       state.cellsOpened = 0;
       state.timeCount = 0;
     },
-    poblateGameboard(state, mines) {
+    poblateGameboard(state, gameMode) {
+      const mines = gameModes[gameMode].mines
       for (let i = 0; i < mines; i++) {
         let placed = false;
         while (!placed) {
@@ -114,7 +132,33 @@ export default new Vuex.Store({
     },
     resetTimeCount(state){
       state.timeCount = 0
+    },
+    setLeaderboard(state, leaderBoard) {
+      state.leaderBoard = leaderBoard
+      state.actualLeaderboard = leaderBoard['easy']
+    },
+    changeLeaderboard(state, gameMode) {
+      state.actualLeaderboard = state.leaderBoard[gameMode]
     }
   },
-  actions: {}
+  actions: {
+    getLeaderboard({commit}) {
+      fetch('https://minesweeper-leaderboard.herokuapp.com/getLeaderboard', {
+        method: 'GET',
+        mode: 'cors'
+      }).then((response) => response.json())
+        .then((leaderboard) => commit('setLeaderboard', leaderboard))
+    },
+    submitScore({commit, dispatch}, score) {
+      fetch('https://minesweeper-leaderboard.herokuapp.com/newScore', {
+        method: 'POST',
+        mode: 'cors',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(score)
+      }).then(() => dispatch('getLeaderboard'))
+      
+    }
+  }
 });

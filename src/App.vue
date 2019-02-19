@@ -16,6 +16,9 @@ export default {
   components: {
     Game,
     LeaderBoard
+  },
+  created() {
+    this.$store.dispatch('getLeaderboard')
   }
 };
 </script>

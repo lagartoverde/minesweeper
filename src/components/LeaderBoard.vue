@@ -16,7 +16,7 @@ export default {
   name: "app",
   computed: {
     leaderBoard() {
-      return this.$store.state.leaderBoard;
+      return this.$store.state.actualLeaderboard;
     }
   }
 }

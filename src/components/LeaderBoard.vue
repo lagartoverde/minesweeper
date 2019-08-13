@@ -1,14 +1,16 @@
 <template>
-  <table class='leaderBoard'>
-    <tr>
-      <th>Name</th>
-      <th>Seconds</th>
-    </tr>
-    <tr v-for="row in leaderBoard" :key='row.id'>
-      <td>{{row.name}}</td>
-      <td>{{row.seconds}}</td>
-    </tr>
-  </table>
+  <div class="leaderboard">
+    <table class='table'>
+      <tr>
+        <th>Name</th>
+        <th>Seconds</th>
+      </tr>
+      <tr v-for="row in leaderBoard" :key='row.id'>
+        <td>{{row.username}}</td>
+        <td>{{row.seconds}}</td>
+      </tr>
+    </table>
+  </div>
 </template>
 
 <script>
@@ -23,13 +25,20 @@ export default {
 </script>
 
 <style scoped lang="scss">
-  .leaderBoard {
-    margin-top: 30%;
-    border: 1px solid black;
+  .leaderboard {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .table {
+    width: 200px;
+    margin-top: 45px;
+    margin-bottom: 50px;
     border-collapse: collapse;
     border-spacing: 0;
     td, th {
-      border: 1px solid black;
+      font-weight: normal;
       padding: 10px;
     }
   }

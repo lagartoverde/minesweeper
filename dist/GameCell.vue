@@ -48,17 +48,18 @@ export default {
 .cell {
   display: flex;
   flex-direction: column;
-  background-color: var(--cellBackground);
-  color: var(--cellFontColor);
+  background-color: var(--background-color);
+  border: 1px solid var(--primary-color);
+  color: var(--primary-color);
   height: 100%;
   width: 100%;
   user-select: none; 
   -webkit-user-select: none !important;
 }
-
 .open {
-  background-color: var(--cellBackgroundOpen);
-  color: var(--cellFontColorOpen);
+  background-color: var(--primary-color);
+  border-color: var(--background-color);
+  color: var(--background-color);
 }
 .center{
   display: flex;

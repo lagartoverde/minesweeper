@@ -1,0 +1,26 @@
+{
+  "default": {
+    "icons": {
+      "flag": "/themes/default/flag.svg",
+      "mine": "/themes/default/mine.svg",
+      "cog": "/themes/default/cog.svg"
+    },
+    "displayName": "Default"
+  },
+  "matrix": {
+    "icons": {
+      "flag": "/themes/matrix/flag.png",
+      "cog": "/themes/matrix/cog.svg"
+    },
+    "displayName": "Matrix"
+  },
+  "paper": {
+    "displayName": "Paper",
+    "icons": {
+      "flag": "/themes/paper/flag.svg",
+      "mine": "/themes/paper/bomb.svg",
+      "cog": "/themes/paper/cog.svg"
+    }
+  }
+
+}

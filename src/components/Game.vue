@@ -1,17 +1,31 @@
 <template>
   <div class="container">
     <div class='selectGame'>
-      <button @click='startGame("easy")'>Easy</button>
-      <button @click='startGame("medium")'>Medium</button>
-      <button @click='startGame("hard")'>Hard</button>
+      <button @click='startGame("easy")' class="button">Easy</button>
+      <button @click='startGame("medium")' class="button">Medium</button>
+      <button @click='startGame("hard")' class="button">Hard</button>
+      <button @click='startMultiplayerGame' class="button">Multiplayer</button>
     </div>
-    <GameBoard class="board"/>
-    <h2 v-if='finished'>
-      {{finishedPhrase}}
-    </h2>
-    <h2 v-else>
-      Time: {{timeCount}}
-    </h2>
+    <div class='boards'>
+      <GameBoard class="gameBoard"/>
+      <GameBoard v-if='isMultiplayer' :opponent='true' class="gameBoard opponentBoard" />
+    </div>
+    <div v-if='isMultiplayer && !(gameStarted)'>
+      Looking for an opponent {{points}}
+    </div>
+    <div v-if='isMultiplayer && multiplayerResultPhrase'>
+      <h2>
+        {{multiplayerResultPhrase}}
+      </h2>
+    </div>
+    <div v-if='!isMultiplayer'>
+      <h2 v-if='finished' class="text">
+        {{finishedPhrase}}
+      </h2>
+      <h2 v-else class="text">
+        Time: {{timeCount}}
+      </h2>
+    </div>
   </div>
 </template>
 
@@ -23,9 +37,18 @@ export default {
   components: {
     GameBoard
   },
+  created() {
+    setInterval(() => {
+      if(this.points.length>2) {
+        this.points = '.'
+      } else {
+        this.points += '.'
+      }
+    }, 1000)
+  },
   data() {
     return {
-      
+      points: '.',
       interval: undefined
     };
   },
@@ -39,55 +62,78 @@ export default {
     timeCount() {
       return this.$store.state.timeCount;
     },
+    isMultiplayer() {
+      return this.$store.state.mode === 'multiplayer'
+    },
+    gameStarted() {
+      return this.$store.state.board && this.$store.state.board.length >0
+    },
+    multiplayerResultPhrase() {
+      const result = this.$store.state.multiplayerResult;
+      if(result) {
+        return result === 'victory' ? 'Congratulations, you won :)' : 'Sorry, you have lost'
+      }
+      return false;
+    }
   },
   methods: {
     startGame(gameMode) {
       clearInterval(this.interval);
-      this.$store.commit('resetTimeCount')
-      this.$store.commit('generateGameboard', gameMode);
-      this.$store.commit('poblateGameboard', gameMode);
+      this.$store.dispatch('newGame', gameMode)
       this.$store.commit('changeLeaderboard', gameMode);
-      this.$store.commit('checkSurroundings');
       this.interval = setInterval(()=> {
         if(!this.finished) {
           this.$store.commit('incrementTimeCount')
         } else {
-          if(this.$store.state.won) {
-            let name = prompt('Please Enter your name (3 letters)')
-            name = name.split('').slice(0,3).join('').toUpperCase()
-            if(name) {
-              const score = {
-                name,
-                seconds: this.$store.state.timeCount,
-                mode: gameMode
-              }
-              this.$store.dispatch('submitScore', score)
-            }
-          }
           clearInterval(this.interval)
         }
       }, 1000);
+    },
+    startMultiplayerGame() {
+      this.$store.dispatch('newMultiplayerGame')
     }
   }
 };
 </script>
 
-<style>
+<style scoped>
 .container {
-  height: 100%;
-  width: 100%;
+  flex: 3;
 }
 .selectGame {
-  margin-top: 8%;
+  margin-top: 15px;
+  padding: 0 30px;
 }
-.board {
-  height: 60%;
-  width: 50%;
-  margin:auto;
-  margin-top: 2%;
+.boards {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
 }
-body, html {
-  height: 100%;
-  width: 100%;
+.gameBoard {
+  margin-top: 30px;
+}
+.opponentBoard {
+  margin-left: 30px;
+}
+.text {
+  margin-top: 20px;
+  font-weight: normal;
+}
+.button {
+  border: var(--button-border);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow);
+  background-color: var(--background-color);
+  color: var(--primary-color);
+  font-family: var(--font), Helvetica, Arial, sans-serif;
+  padding: 15px 20px;
+  margin: 10px;
+  font-size: 1em;
+}
+
+@media screen and (max-width: 600px) {
+  .opponentBoard {
+    margin-left: 0;
+  }
 }
 </style>

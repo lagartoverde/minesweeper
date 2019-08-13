@@ -1,68 +1,92 @@
 <template>
-  <div class="container">
-    <div v-for='(rowArray,indexX) in boardArray' :key='indexX'  class='row'>
-      <div v-for='(element, indexY) in rowArray' :key='indexY' class='element'>
-        <GameCell 
-          :element='element' 
-          :x='indexX' 
-          :y='indexY' 
-          :state='boardState[indexX][indexY]'
-          @click.native.left='rigthClickCell(indexX,indexY)'
-          @click.native.right.prevent='flagCell(indexX,indexY)'
-        />
+  <div class="boardContainer">
+    <div class="board" :class="{filled: board.length >0}">
+      <div v-for='(rowArray,indexX) in board' :key='indexX'  class='row'>
+        <div v-for='(element, indexY) in rowArray' :key='indexY' class='element' :class='{open: element !== "?" && element !== "F"}'>
+          <GameCell 
+            :element='element' 
+            :x='indexX' 
+            :y='indexY' 
+            v-longclick="() => flagCellMobile(indexX, indexY)"
+            @click.native.left='openCell(indexX,indexY)'
+            @click.native.right.prevent='flagCell(indexX,indexY)'
+
+          />
+        </div>
       </div>
+    </div>
+    <div class='multiplayerInfo' v-if="multiplayerInfo && gameStarted">
+      <p class="username">{{multiplayerInfo.username}}</p>
+      <span class="level" v-if="multiplayerInfo.lvl">lvl {{multiplayerInfo.lvl}}</span>
     </div>
   </div>
 </template>
 
 <script>
 import GameCell from './GameCell.vue'
+import { isMobile } from 'mobile-device-detect';
 export default {
   name: "HelloWorld",
   components: {
     GameCell
   },
+  props: {
+    opponent: Boolean
+  },
   computed: {
-    boardArray() {
-      return this.$store.state.board;
+    board() {
+      if(this.opponent) {
+        return this.$store.state.opponentBoard
+      }
+      return this.$store.state.board
     },
-    boardState() {
-      return this.$store.state.boardState;
+    multiplayerInfo() {
+      if(this.$store.state.mode === 'multiplayer') {
+        if(this.opponent) {
+          return this.$store.state.opponentInfo;
+        } else {
+          return this.$store.state.playerInfo;
+        }
+      } else {
+        return undefined;
+      }
+    },
+    gameStarted() {
+      return this.$store.state.board && this.$store.state.board.length >0
     }
   },
   methods: {
-    rigthClickCell(x, y) {
-      this.openCell(x, y);
-      this.boardState = this.$store.state.boardState;
-    },
     openCell(x,y) {
-      if (this.$store.state.boardState[x][y] !== 0) return;
-      this.$store.commit('openCell',{ x, y });
-      const maxIndex = this.$store.state.size - 1;
-      if (this.$store.state.board[x][y] === '0') {
-        if(x > 0) this.openCell(x-1,y);
-        if(x < maxIndex) this.openCell(x+1,y);
-        if(y > 0) this.openCell(x,y-1);
-        if(y < maxIndex) this.openCell(x,y+1);
-        if(x > 0 && y > 0) this.openCell(x-1,y-1);
-        if(x < maxIndex && y > 0) this.openCell(x+1,y-1);
-        if(x > 0 && y < maxIndex) this.openCell(x-1,y+1);
-        if(x < maxIndex && y < maxIndex) this.openCell(x+1,y+1);
+      if(this.opponent) return;
+      this.$store.dispatch('openCell', {x,y})
+    },
+    flagCellMobile(x,y) {
+      if(this.opponent) return;
+      if(isMobile) {
+        this.$store.dispatch('flagCell', {x,y})
       }
     },
     flagCell(x,y){
-      this.$store.commit('flagCell', {x,y})
-      this.boardState = this.$store.state.boardState;
+      if(this.opponent) return;
+      this.$store.dispatch('flagCell', {x,y})
     }
   }
 };
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
-<style scoped>
-.container {
+<style scoped lang='scss'>
+
+.boardContainer {
+  width: 400px;
+}
+.board {
+  height: 400px;
   display: flex;
   flex-direction: column;
+}
+.filled {
+  border: var(--gameOuterBorder);
 }
 .row {
   display: flex;
@@ -70,7 +94,31 @@ export default {
   height: 100%;
 }
 .element {
+  cursor: pointer;
   height: 100%;
   width: 100%;
+  border-right: 1px solid var(--cellBorderColor);
+  border-bottom: 1px solid var(--cellBorderColor);
+  box-sizing: border-box;
+}
+.element:first-child {
+  border-left: 1px solid var(--cellBorderColor);
+}
+.row:first-child .element{
+  border-top: 1px solid var(--cellBorderColor);
+}
+.open {
+  border-color: var(--cellBorderColorOpen);
+}
+.multiplayerInfo {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  .username {
+    margin-right: 5px;
+  }
+  .level {
+    font-weight: bold;
+  }
 }
 </style>

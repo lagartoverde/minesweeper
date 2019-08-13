@@ -1,5 +1,6 @@
 import Vue from "vue";
 import Vuex from "vuex";
+import io from 'socket.io-client';
 
 Vue.use(Vuex);
 
@@ -21,144 +22,212 @@ const gameModes = {
 export default new Vuex.Store({
   state: {
     board: [],
-    boardState: [],
-    size: 0,
     finished: false,
-    flagsRemaining: 0,
     won: undefined,
-    cellsOpened: 0,
-    mines: 0,
+    started: null,
     timeCount: 0,
-    leaderBoard: [
-      {id: 1, name: 'AAA', seconds: 13},
-      {id: 2, name: 'BBB', seconds: 15},
-      {id: 3, name: 'CCC', seconds: 19},
-      {id: 4, name: 'DDD', seconds: 21},
-      {id: 5, name: 'EEE', seconds: 23},
-      {id: 6, name: 'FFF', seconds: 24},
-      {id: 7, name: 'GGG', seconds: 26},
-      {id: 8, name: 'HHH', seconds: 30},
-    ],
-    actualLeaderboard : []
+    leaderBoard: [],
+    actualLeaderboard : [],
+    gameId: undefined,
+    theme: 'default',
+    mode: 'easy',
+    opponentBoard: [],
+    multiplayerResult: undefined,
+    playerInfo: undefined,
+    opponentInfo: undefined
   },
   mutations: {
-    generateGameboard(state, gameMode) {
-      const size = gameModes[gameMode].size
-      const arrayBoard = [];
-      const arrayOpened = [];
-      for (let i = 0; i < size; i++) {
-        const innerArrayBoard = [];
-        const innerArrayOpened = [];
-        for (let j = 0; j < size; j++) {
-          innerArrayBoard.push(0);
-          innerArrayOpened.push(0);
-        }
-        arrayBoard.push(innerArrayBoard);
-        arrayOpened.push(innerArrayOpened);
-      }
-      state.board = arrayBoard;
-      state.boardState = arrayOpened;
-      state.size = size;
-      state.finished = false;
-      state.won = undefined;
-      state.cellsOpened = 0;
-      state.timeCount = 0;
-    },
-    poblateGameboard(state, gameMode) {
-      const mines = gameModes[gameMode].mines
-      for (let i = 0; i < mines; i++) {
-        let placed = false;
-        while (!placed) {
-          let x = Math.floor(Math.random() * (state.size - 1));
-          let y = Math.floor(Math.random() * (state.size - 1));
-          if (state.board[x][y] !== "X") {
-            state.board[x][y] = "X";
-            placed = true;
-          }
-        }
-      }
-      state.mines = mines
-      state.flagsRemaining = mines;
-    },
-    checkSurroundings(state) {
-      for (let i = 0; i < state.size; i++) {
-        for (let j = 0; j < state.size; j++) {
-          if (state.board[i][j] === "X") continue;
-          let minesAround = 0;
-          if (i > 0 && state.board[i-1][j] === "X") minesAround++;
-          if (i < state.size - 1 && state.board[i+1][j] === "X") minesAround++;
-          if (j > 0 && state.board[i][j-1] === "X") minesAround++;
-          if (j < state.size - 1 && state.board[i][j+1] === "X") minesAround++;
-          if (i > 0 && j > 0 && state.board[i-1][j-1] === "X") minesAround++;
-          if (i < state.size - 1 && j < state.size - 1 && state.board[i+1][j+1] === "X") minesAround++;
-          if (i > 0 && j < state.size - 1 && state.board[i-1][j+1] === "X") minesAround++;
-          if (i < state.size - 1 && j > 0 && state.board[i+1][j-1] === "X") minesAround++;
-          state.board[i][j] = '' + minesAround
-        }
-      }
-    },
-    openCell(state,{x, y}) {
-      if(state.finished) return
-      if(state.board[x][y] === 'X'){
-        state.finished = true;
-        state.won = false;
-      }
-      const copy = state.boardState.slice(0);
-      copy[x][y] = 1;
-      state.boardState = copy;
-      state.cellsOpened ++;
-      if(state.cellsOpened === (state.size * state.size) - state.mines){
-        state.finished = true;
-        state.won = true;
-      }
-    },
-    flagCell(state, {x,y}) {
-      if(state.finished) return;
-      if(state.boardState[x][y] === 0) {
-        if(state.flagsRemaining === 0) return;
-        const copy = state.boardState.slice(0);
-        copy[x][y] = 2;
-        state.boardState = copy;
-        state.flagsRemaining -= 1
-      } else if(state.boardState[x][y] === 2){
-        const copy = state.boardState.slice(0);
-        copy[x][y] = 0;
-        state.boardState = copy;
-        state.flagsRemaining += 1
-      }
-    },
     incrementTimeCount(state) {
-      state.timeCount++;
+      const actualDate = new Date();
+      const diff = actualDate.getTime() - state.started.getTime();
+      const diffSeconds = Math.floor(diff/1000)
+      state.timeCount = diffSeconds
     },
     resetTimeCount(state){
       state.timeCount = 0
     },
     setLeaderboard(state, leaderBoard) {
       state.leaderBoard = leaderBoard
-      state.actualLeaderboard = leaderBoard['easy']
+      state.actualLeaderboard = leaderBoard[state.mode]
     },
     changeLeaderboard(state, gameMode) {
       state.actualLeaderboard = state.leaderBoard[gameMode]
+    },
+    setNewGame(state,game) {
+      state.gameId = game.id
+      state.board= game.board
+      state.started = new Date(game.started)
+      state.finished = false;
+      state.won = undefined
+      
+    },
+    updateBoard(state, {boardState, finished, won}) {
+      
+      state.board = boardState;
+      state.finished = finished;
+      state.won = won;
+    },
+    updatePlayerBoard(state, playerBoard) {
+      state.board = playerBoard;
+    },
+    updateOpponentBoard(state, opponentBoard) {
+      state.opponentBoard = opponentBoard;
+    },
+    changeTheme(state, theme) {
+      state.theme = theme
+    },
+    setSocket(state,socket) {
+      state.socket = socket
+    },
+    setGameMode(state, gameMode) {
+      if(state.socket ) {
+        state.socket.disconnect()
+      }
+      state.mode = gameMode
+    },
+    setMultiplayerResult(state, victory) {
+      if(victory) {
+        state.multiplayerResult = 'victory'
+      } else {
+        state.multiplayerResult = 'defeat'
+      }
+    },
+    resetGameData(state){
+      state.board= [];
+      state.finished = false;
+      state.won = undefined;
+      state.started = null;
+      state.timeCount = 0;
+      state.gameId = undefined;
+      state.opponentBoard = [];
+      state.multiplayerResult = undefined;
+    },
+    updatePlayerInfo(state, playerInfo) {
+      state.playerInfo = playerInfo
+    },
+    resetOpponentInfo(state) {
+      state.opponentInfo = undefined
+    },
+    setOpponentInfo(state, opponentInfo) {
+      console.log(opponentInfo)
+      state.opponentInfo = opponentInfo;
     }
   },
   actions: {
-    getLeaderboard({commit}) {
-      fetch('https://minesweeper-leaderboard.herokuapp.com/getLeaderboard', {
-        method: 'GET',
-        mode: 'cors'
-      }).then((response) => response.json())
-        .then((leaderboard) => commit('setLeaderboard', leaderboard))
-    },
-    submitScore({commit, dispatch}, score) {
-      fetch('https://minesweeper-leaderboard.herokuapp.com/newScore', {
+    newGame({commit}, gameMode) {
+      const data = {mode: gameMode}
+      commit('setGameMode', gameMode)
+      fetch(`${process.env.VUE_APP_BACKEND}/game/new`, {
         method: 'POST',
         mode: 'cors',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(score)
+        body: JSON.stringify(data)
+      }).then((response) => response.json())
+        .then((json) => commit('setNewGame', json))
+    },
+    openCell({commit,state, dispatch}, position) {
+      if(state.mode === 'multiplayer') {
+        return state.socket.emit('openCell', position)
+      }
+      let data = {...position};
+      if(state.playerInfo && state.playerInfo.token) {
+        data.token = state.playerInfo.token;
+      }
+      fetch(`${process.env.VUE_APP_BACKEND}/game/${state.gameId}/open`, {
+        method: 'POST',
+        mode: 'cors',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': state.playerInfo && state.playerInfo.token ? `JWT ${state.playerInfo.token}` : 'none'
+        },
+        body: JSON.stringify(data)
+      }).then((response) => response.json())
+        .then((json) => {
+          commit('updateBoard', json)
+          if(json.won) {
+            dispatch('getLeaderboard')
+          }
+          if(json.playerInfo) {
+            commit('updatePlayerInfo', json.playerInfo)
+          }
+        } )
+    },
+    flagCell({commit,state}, position) {
+      if(state.mode === 'multiplayer') {
+        return state.socket.emit('flagCell', position)
+      }
+      fetch(`${process.env.VUE_APP_BACKEND}/game/${state.gameId}/flag`, {
+        method: 'POST',
+        mode: 'cors',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(position)
+      }).then((response) => response.json())
+        .then((json) => commit('updateBoard', json))
+    },
+    getLeaderboard({commit}) {
+      
+      fetch(`${process.env.VUE_APP_BACKEND}/leaderboard`, {
+        method: 'GET',
+        mode: 'cors'
+      }).then((response) => response.json())
+        .then((leaderboard) => commit('setLeaderboard', leaderboard))
+    },
+    submitScore({commit, dispatch, state}, name) {
+      const data = {name}
+      fetch(`${process.env.VUE_APP_BACKEND}/game/${state.gameId}/submitScore`, {
+        method: 'POST',
+        mode: 'cors',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
       }).then(() => dispatch('getLeaderboard'))
       
+    },
+    newMultiplayerGame({commit, state}) {
+      commit('resetGameData');
+      commit('resetOpponentInfo');
+      commit('setGameMode', 'multiplayer')
+      const socket = io.connect(process.env.VUE_APP_SOCKET, {forceNew: true});
+      commit('setSocket', socket)
+      socket.on('startGame', ({playerBoard, opponentBoard})=> {
+        if(state.playerInfo && state.playerInfo.token) {
+          socket.emit('loggedPlayer', state.playerInfo.token)
+        } else {
+          socket.emit('unloggedPlayer')
+        }
+        commit('updatePlayerBoard', playerBoard)
+        commit('updateOpponentBoard', opponentBoard)
+      })
+      socket.on('updatePlayerBoard', board => {
+        commit('updatePlayerBoard', board)
+      })
+      socket.on('updateOpponentBoard', board => {
+        console.log(board)
+        commit('updateOpponentBoard', board)
+      })
+      socket.on('gameFinished', ({victory}) => {
+        commit('setMultiplayerResult', victory)
+      })
+      socket.on('opponentInfo', (opponentInfo) => {
+        commit('setOpponentInfo', opponentInfo)
+      })
+    },
+    login({commit}, username) {
+      const data = {username}
+      fetch(`${process.env.VUE_APP_BACKEND}/login`, {
+        method: 'POST',
+        mode: 'cors',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+      }).then((response) => response.json())
+        .then((json) => commit('updatePlayerInfo', json))
     }
   }
 });
